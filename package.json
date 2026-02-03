@@ -1,0 +1,36 @@
+{
+  "name": "entrega1",
+  "version": "1.0.0",
+  "description": "Entrega1 Coder",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucianoFrasca/Entrega1-CoderHouse.git"
+  },
+  "keywords": [
+    "Backend",
+    "Javascript",
+    "Coderhouse",
+    "App"
+  ],
+  "author": "Luciano Frasca",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LucianoFrasca/Entrega1-CoderHouse/issues"
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8",
+    "chalk": "5.6.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.11"
+  },
+  "homepage": "https://github.com/LucianoFrasca/Entrega1-CoderHouse#readme"
+}
