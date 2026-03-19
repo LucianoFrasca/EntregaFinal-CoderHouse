@@ -1,0 +1,68 @@
+<h1 style="color: #2c3e50; text-align: center; border-bottom: 2px solid #eaeaea; padding-bottom: 15px;">Listado de Autos Disponibles</h1>
+
+<div style="margin-top: 30px;">
+    {{#each autos}}
+        <div style="background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0 0 5px 0; color: #333;">{{this.modelo}}</h3>
+                <p style="margin: 0; color: #666; font-size: 0.9em;">Categoría: <strong>{{this.categoria}}</strong></p>
+                <p style="margin: 5px 0 0 0; color: #27ae60; font-weight: bold; font-size: 1.2em;">ARS ${{this.precio}}</p>
+            </div>
+            <button onclick="agregarAlCarrito('{{this._id}}')" style="padding: 10px 20px; background-color: #4CAF50; color: white; cursor: pointer; border: none; border-radius: 5px; font-weight: bold;">
+                Agregar al Carrito
+            </button>
+        </div>
+    {{/each}}
+</div>
+
+<div style="margin-top: 30px; text-align: center;">
+    {{#if result.hasPrevPage}}
+        <a href="/products?page={{result.prevPage}}" style="text-decoration: none; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; background-color: white; color: #333; margin: 0 5px;">&laquo; Anterior</a>
+    {{/if}}
+    
+    <span style="margin: 0 15px; font-weight: bold;">Página {{result.page}} de {{result.totalPages}}</span>
+    
+    {{#if result.hasNextPage}}
+        <a href="/products?page={{result.nextPage}}" style="text-decoration: none; padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; background-color: white; color: #333; margin: 0 5px;">Siguiente &raquo;</a>
+    {{/if}}
+</div>
+
+<div style="margin-top: 40px; border-top: 2px solid #eaeaea; padding-top: 20px; text-align: center;">
+    <button onclick="verMiCarrito()" style="padding: 15px 30px; background-color: #2c3e50; color: white; cursor: pointer; border: none; border-radius: 5px; font-size: 1.1em; font-weight: bold;">
+        Ver mi Carrito de Compras
+    </button>
+</div>
+
+<script>
+    async function agregarAlCarrito(autoId) {
+        try {
+            let cartId = localStorage.getItem('cartId');
+
+            if (!cartId) {
+                const response = await fetch('/api/carts', { method: 'POST' });
+                const data = await response.json();
+                cartId = data.payload._id;
+                localStorage.setItem('cartId', cartId);
+            }
+
+            const addResponse = await fetch(`/api/carts/${cartId}/products/${autoId}`, { method: 'POST' });
+
+            if (addResponse.ok) {
+                alert('¡Auto agregado al carrito con éxito!');
+            } else {
+                alert('Hubo un error al agregar el auto.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    
+    function verMiCarrito() {
+        const cartId = localStorage.getItem('cartId');
+        if (cartId) {
+            window.location.href = `/carts/${cartId}`;
+        } else {
+            alert("Tu carrito está vacío, agregá un auto primero.");
+        }
+    }
+</script>

@@ -1,110 +1,91 @@
-const express = require("express");
-const fs = require("fs"); 
+const express = require('express');
+const mongoose = require('mongoose');
+const { engine } = require('express-handlebars');
+const { Server } = require('socket.io');
+const http = require('http');
+
+const autosRouter = require('./routes/autos.router');
+const cartsRouter = require('./routes/carts.router');
+const Auto = require('./models/Auto');
+const Cart = require('./models/Cart');
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 const PORT = 3000;
-const FILE_NAME = "autos.json";
 
-// Middleware
+// REEMPLAZAR POR TU URL DE MONGO
+mongoose.connect('mongodb+srv://luciano:rXO6nHVmBoU4Eb3n@coder.4yrxnzm.mongodb.net/?appName=Coder')
+    .then(() => console.log('Conectado a MongoDB Atlas'))
+    .catch(err => console.error('Error conectando a Mongo', err));
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Leer autos desde el archivo
-const leerAutos = () => {
-    try {
-        const data = fs.readFileSync(FILE_NAME, "utf-8");
-        return JSON.parse(data);
-    } catch (error) {
-        console.error("Error al leer el archivo", error);
-        return [];
-    }
-};
-// Guardar autos en el archivo
-const guardarAutos = (autos) => {
-    try {
-        fs.writeFileSync(FILE_NAME, JSON.stringify(autos, null, 2));
-    } catch (error) {
-        console.error("Error al guardar el archivo", error);
-    }
-};
+app.engine('handlebars', engine());
+app.set('view engine', 'handlebars');
+app.set('views', './views');
 
-// Rutas
+// API Endpoints
+app.use('/api/autos', autosRouter);
+app.use('/api/carts', cartsRouter);
+
+// Vistas Web
 app.get('/', (req, res) => {
-    res.status(200).send("Bienvenido a la API de Autos (Entrega #1)");
+    res.redirect('/products');
 });
 
-// GET - Obtener todos los autos
-app.get('/autos', (req, res) => {
-    const autos = leerAutos();
-    res.status(200).json({ cantidad: autos.length, autos: autos });
+app.get('/products', async (req, res) => {
+    const { page = 1 } = req.query;
+    // Paginación de 5 en 5 para la vista web
+    const result = await Auto.paginate({}, { page: parseInt(page), limit: 5, lean: true });
+    res.render('products', { autos: result.docs, result });
 });
 
-// GET - Obtener un auto por ID
-app.get('/autos/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const autos = leerAutos();
-    const auto = autos.find(a => a.id === id);
+app.get('/realtimeproducts', async (req, res) => {
+    const autos = await Auto.find().lean();
+    res.render('realTimeProducts', { autos });
+});
 
-    if (!auto) {
-        return res.status(404).json({ error: "Auto no encontrado" });
+// Vista del Carrito (MEJORADA con Cálculo de Total)
+app.get('/carts/:cid', async (req, res) => {
+    try {
+        const cart = await Cart.findById(req.params.cid).lean();
+        if(!cart) return res.status(404).send("Carrito no encontrado");
+        
+        // --- Cálculo del Total ARS ---
+        let totalAcumulado = 0;
+        cart.products.forEach(item => {
+            if(item.auto) { // Si el auto existe y se populó bien
+                totalAcumulado += item.auto.precio * item.quantity;
+            }
+        });
+
+        // Pasamos el total formateado (para que ponga comas/puntos si es muy grande, opcional)
+        // Usamos simple .toString() para mantenerlo básico
+        res.render('cart', { 
+            cart, 
+            total: totalAcumulado 
+        });
+
+    } catch (error) {
+        res.status(404).send("Error al cargar el carrito");
     }
-    res.status(200).json(auto);
 });
 
-// POST - Agregar un nuevo auto
-app.post('/autos', (req, res) => {
-    const { modelo, precio } = req.body;
-    const autos = leerAutos();
-    // Nuevo auto con ID unico
-    const nuevoAuto = {
-        id: autos.length ? autos[autos.length - 1].id + 1 : 1,
-        modelo,
-        precio
-    };
+// Websockets
+io.on('connection', (socket) => {
+    socket.on('nuevoAuto', async (autoData) => {
+        await Auto.create(autoData);
+        const autosActualizados = await Auto.find().lean();
+        io.emit('actualizarLista', autosActualizados); 
+    });
 
-    autos.push(nuevoAuto);
-    guardarAutos(autos);
-
-    res.status(201).json({ message: "Auto agregado con éxito", auto: nuevoAuto });
+    socket.on('eliminarAuto', async (id) => {
+        await Auto.findByIdAndDelete(id);
+        const autosActualizados = await Auto.find().lean();
+        io.emit('actualizarLista', autosActualizados);
+    });
 });
 
-// PUT - Modificar un auto existente
-app.put('/autos/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const { modelo, precio } = req.body;
-    const autos = leerAutos();
-    
-    const index = autos.findIndex(a => a.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({ error: "Auto no encontrado" });
-    }
-
-   
-    autos[index].modelo = modelo ?? autos[index].modelo;
-    autos[index].precio = precio ?? autos[index].precio;
-
-    guardarAutos(autos);
-
-    res.status(200).json({ message: "Auto actualizado", auto: autos[index] });
-});
-
-// DELETE - Eliminar un auto
-app.delete('/autos/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    let autos = leerAutos();
-    
-    const existe = autos.some(a => a.id === id);
-    if (!existe) {
-        return res.status(404).json({ error: "Auto no encontrado" });
-    }
-
-   
-    autos = autos.filter(a => a.id !== id);
-    
-    guardarAutos(autos); 
-
-    res.status(204).send();
-});
-
-app.listen(PORT, () => {
-    console.log(`Servidor de Autos escuchando en http://localhost:${PORT}`);
-});
+server.listen(PORT, () => console.log(`Servidor de Autos escuchando en http://localhost:${PORT}`));

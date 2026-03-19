@@ -1,0 +1,75 @@
+<h1 style="color: #2c3e50; text-align: center; border-bottom: 2px solid #eaeaea; padding-bottom: 15px;">Administración en Tiempo Real (Websockets)</h1>
+
+<div style="display: flex; gap: 30px; margin-top: 30px;">
+    <div style="border: 1px solid #ddd; padding: 25px; width: 350px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink: 0; align-self: flex-start;">
+        <h3 style="margin: 0 0 15px 0;">Agregar nuevo auto</h3>
+        <input type="text" id="modelo" placeholder="Modelo (Ej: Ford Focus ranger)" style="margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
+        <input type="number" id="precio" placeholder="Precio" style="margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
+        <input type="text" id="categoria" placeholder="Categoría (Ej: Sedan)" style="margin-bottom: 15px; width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
+        <button onclick="enviarAuto()" style="width: 100%; padding: 12px; background-color: #4CAF50; color: white; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; font-size: 1em;">Agregar Auto</button>
+    </div>
+
+    <div style="flex-grow: 1;">
+        <h3 style="margin: 0 0 15px 0;">Listado en vivo:</h3>
+        <div id="lista-autos">
+            {{#each autos}}
+                <div style="background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="font-size: 1.1em;">{{this.modelo}}</strong> 
+                        <span style="color: #666; margin: 0 10px;">- Categoría: {{this.categoria}}</span>
+                        <span style="color: #27ae60; font-weight: bold;">ARS ${{this.precio}}</span>
+                    </div>
+                    <button onclick="eliminarAuto('{{this._id}}')" style="padding: 5px 12px; background-color: #f44336; color: white; cursor: pointer; border: none; border-radius: 4px; font-size: 0.9em;">
+                        Eliminar
+                    </button>
+                </div>
+            {{/each}}
+        </div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+
+    function enviarAuto() {
+        const modelo = document.getElementById('modelo').value;
+        const precio = document.getElementById('precio').value;
+        const categoria = document.getElementById('categoria').value;
+
+        if(modelo && precio && categoria) {
+            socket.emit('nuevoAuto', { modelo, precio, categoria });
+            document.getElementById('modelo').value = '';
+            document.getElementById('precio').value = '';
+            document.getElementById('categoria').value = '';
+        } else {
+            alert("Completá todos los campos");
+        }
+    }
+
+    function eliminarAuto(id) {
+        if(confirm("¿Estás seguro de eliminar este auto definitivamente?")) {
+            socket.emit('eliminarAuto', id);
+        }
+    }
+
+    socket.on('actualizarLista', (autosActualizados) => {
+        const lista = document.getElementById('lista-autos');
+        lista.innerHTML = ''; 
+        
+        autosActualizados.forEach(auto => {
+            lista.innerHTML += `
+                <div style="background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="font-size: 1.1em;">${auto.modelo}</strong> 
+                        <span style="color: #666; margin: 0 10px;">- Categoría: ${auto.categoria}</span>
+                        <span style="color: #27ae60; font-weight: bold;">ARS $${auto.precio}</span>
+                    </div>
+                    <button onclick="eliminarAuto('${auto._id}')" style="padding: 5px 12px; background-color: #f44336; color: white; cursor: pointer; border: none; border-radius: 4px; font-size: 0.9em;">
+                        Eliminar
+                    </button>
+                </div>
+            `;
+        });
+    });
+</script>

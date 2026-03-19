@@ -1,0 +1,144 @@
+{
+  "info": {
+    "_postman_id": "218f385c-e492-4243-bff2-c5b10754756d",
+    "name": "Purebas Entrega Final",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47512057",
+    "_collection_link": "https://go.postman.co/collection/47512057-218f385c-e492-4243-bff2-c5b10754756d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "GET",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"nombre\": \"Luciano\",\r\n  \"apellido\": \"Admin\",\r\n  \"email\": \"admin@itsoft.com\",\r\n  \"password\": \"tu_password\",\r\n  \"rol\": \"admin\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/autos?limit=3&page=1&sort=desc&query=",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "autos"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "3"
+            },
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "sort",
+              "value": "desc"
+            },
+            {
+              "key": "query",
+              "value": ""
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Revisando el carrito",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Nuevo Carrito",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/carts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "carts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Agregando producto",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/carts/69bc804ac33c258799ac1f3b/products/69bc797f34311b2978841d53",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "carts",
+            "69bc804ac33c258799ac1f3b",
+            "products",
+            "69bc797f34311b2978841d53"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Agregando cantidad de autos",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"quantity\": 10\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/carts/69bc804ac33c258799ac1f3b/products/69bc797f34311b2978841d53",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "carts",
+            "69bc804ac33c258799ac1f3b",
+            "products",
+            "69bc797f34311b2978841d53"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
